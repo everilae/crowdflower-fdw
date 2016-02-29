@@ -6,13 +6,21 @@ CrowdFlower API v1 foreign data wrapper for PostgreSQL.
 Installation
 ------------
 
+Install the python package. It must be accessible to PostgreSQL, so the easiest
+way is to install it globally.
+
 ```bash
-    git clone https://github.com/everilae/crowdflower-fdw.git
-    cd crowdflower-fdw
-    python setup.py install
+git clone https://github.com/everilae/crowdflower-fdw.git
+cd crowdflower-fdw
+python setup.py install
 ```
 
+Install [Multicorn](http://multicorn.org) and create foreign server and table
+definitions.
+
 ```sql
+create extension multicorn;
+
 create server crowdflower_srv foreign data wrapper multicorn options (
         wrapper 'crowdflower_fdw.JobReportFDW'
 );
