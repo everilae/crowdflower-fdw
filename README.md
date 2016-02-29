@@ -33,9 +33,9 @@ create foreign table cf_job_result (
 	judgments_count integer,
 	agreement float,
 	missed_count integer,
-	state character varying
+	state character varying,
 	data jsonb,
-	results jsonb,
+	results jsonb
 ) server crowdflower_srv options (
 	key 'YOURCFAPIKEY',
 	type 'jobreport'
@@ -46,8 +46,8 @@ create foreign table cf_job_judgment (
 	updated_at timestamp without time zone,
 	agreement float,
 	ids integer[],
-	state character varying
-	fields jsonb,
+	state character varying,
+	fields jsonb
 ) server crowdflower_srv options (
 	key 'YOURCFAPIKEY',
 	type 'jobjudgment'
