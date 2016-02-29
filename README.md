@@ -26,18 +26,18 @@ create server crowdflower_srv foreign data wrapper multicorn options (
 );
 
 create foreign table cf_job_result (
-        job_id integer,
-        id integer,
-        created_at timestamp without time zone,
-        updated_at timestamp without time zone,
-        judgments_count integer,
-        agreement float,
-        missed_count integer,
-        state character varying
-        data jsonb,
-        results jsonb,
+	job_id integer,
+	id integer,
+	created_at timestamp without time zone,
+	updated_at timestamp without time zone,
+	judgments_count integer,
+	agreement float,
+	missed_count integer,
+	state character varying
+	data jsonb,
+	results jsonb,
 ) server crowdflower_srv options (
-        key 'YOURCFAPIKEY',
+	key 'YOURCFAPIKEY',
 	type 'jobreport'
 );
 
