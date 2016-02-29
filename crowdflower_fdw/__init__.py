@@ -1,11 +1,10 @@
 import json
-from itertools import chain
 from zipfile import BadZipFile, ZipFile
 
 import requests
 from multicorn import ForeignDataWrapper, ANY
 
-from io import BytesIO
+from io import BytesIO, TextIOWrapper
 
 
 class JobReportFDW(ForeignDataWrapper):
@@ -35,15 +34,10 @@ class JobReportFDW(ForeignDataWrapper):
         )
 
         with ZipFile(BytesIO(resp.content)) as zf:
-            yield from map(json.loads, chain.from_iterable(
-                map(
-                    lambda bs: (
-                        line for line in bs.decode('utf-8').split('\n')
-                        if line
-                    ),
-                    map(zf.read, zf.namelist())
-                )
-            ))
+            for name in zf.namelist():
+                with zf.open(name) as f:
+                    yield from map(json.loads,
+                                   TextIOWrapper(f, encoding='utf-8'))
 
     def execute(self, quals, columns):
         """
