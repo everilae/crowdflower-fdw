@@ -1,0 +1,3 @@
+*.pyc
+crowdflower_fdw.egg-info
+build
