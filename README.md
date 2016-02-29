@@ -22,10 +22,10 @@ definitions.
 create extension multicorn;
 
 create server crowdflower_srv foreign data wrapper multicorn options (
-        wrapper 'crowdflower_fdw.JobReportFDW'
+        wrapper 'crowdflower_fdw.factory'
 );
 
-create foreign table job_result (
+create foreign table cf_job_result (
         job_id integer,
         id integer,
         created_at timestamp without time zone,
@@ -37,6 +37,19 @@ create foreign table job_result (
         data jsonb,
         results jsonb,
 ) server crowdflower_srv options (
-        key 'YOURCFAPIKEY'
+        key 'YOURCFAPIKEY',
+	type 'jobreport'
+);
+
+create foreign table cf_job_judgment (                                                                      
+	job_id integer,
+	updated_at timestamp without time zone,
+	agreement float,
+	ids integer[],
+	state character varying
+	fields jsonb,
+) server crowdflower_srv options (
+	key 'YOURCFAPIKEY',
+	type 'jobjudgment'
 );
 ```

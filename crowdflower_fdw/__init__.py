@@ -1,4 +1,5 @@
 import json
+from itertools import count
 from zipfile import BadZipFile, ZipFile
 
 import requests
@@ -7,7 +8,51 @@ from multicorn import ForeignDataWrapper, ANY
 from io import BytesIO, TextIOWrapper
 
 
-class JobReportFDW(ForeignDataWrapper):
+def api_request(path, *, key, params, method='get', **kwgs):
+    """
+
+    @param path:
+    @param params:
+    @param kwgs:
+    @return:
+    """
+    params['key'] = key
+    return requests.request(
+        method=method,
+        url='https://api.crowdflower.com/v1/{}'.format(path),
+        params=params,
+        **kwgs
+    )
+
+
+class CrowdFlowerFDW:
+
+    @staticmethod
+    def get_job_ids_from(quals):
+        job_ids = []
+        for qual in quals:
+            if qual.field_name == 'job_id':
+                if qual.operator == '=':
+                    job_ids = [qual.value]
+
+                elif qual.is_list_operator and qual.list_any_or_all is ANY:
+                    job_ids.extend(qual.value)
+
+        return job_ids
+
+
+def factory(options, columns):
+    type_ = options['type'].lower()
+    if type_ == 'jobreport':
+        return JobReportFDW(options, columns)
+
+    elif type_ == 'jobjudgment':
+        return JobJudgmentFDW(options, columns)
+
+    raise RuntimeError('Unknown type: {!r}'.format(type_))
+
+
+class JobReportFDW(ForeignDataWrapper, CrowdFlowerFDW):
     """
 
     """
@@ -19,7 +64,6 @@ class JobReportFDW(ForeignDataWrapper):
         @param columns:
         """
         super(JobReportFDW, self).__init__(options, columns)
-        self.columns = columns
         self._key = options['key']
 
     def _get_results(self, job_id):
@@ -28,9 +72,10 @@ class JobReportFDW(ForeignDataWrapper):
         @param job_id:
         @return:
         """
-        resp = requests.get(
-            'https://api.crowdflower.com/v1/jobs/{}.csv'.format(job_id),
-            params=dict(type='json', key=self._key),
+        resp = api_request(
+            'jobs/{}.csv'.format(job_id),
+            key=self._key,
+            params=dict(type='json'),
         )
 
         with ZipFile(BytesIO(resp.content)) as zf:
@@ -45,15 +90,7 @@ class JobReportFDW(ForeignDataWrapper):
         @param quals:
         @param columns:
         """
-        job_ids = []
-
-        for qual in quals:
-            if qual.field_name == 'job_id':
-                if qual.operator == '=':
-                    job_ids = [qual.value]
-
-                elif qual.is_list_operator and qual.list_any_or_all is ANY:
-                    job_ids.extend(qual.value)
+        job_ids = self.get_job_ids_from(quals)
 
         if not job_ids:
             raise RuntimeError('Can not query without job_id')
@@ -75,3 +112,43 @@ class JobReportFDW(ForeignDataWrapper):
 
                 else:
                     raise RuntimeError("Unit without data")
+
+
+class JobJudgmentFDW(ForeignDataWrapper, CrowdFlowerFDW):
+    """
+
+    """
+
+    def __init__(self, options, columns):
+        """
+
+        @param options:
+        @param columns:
+        """
+        super(JobJudgmentFDW, self).__init__(options, columns)
+        self._key = options['key']
+
+    def _get_judgments(self, job_id):
+        page = count(1)
+        path = 'jobs/{}/judgments.json'.format(job_id)
+        for resp in iter(lambda: api_request(path,
+                                             params=dict(page=next(page),
+                                                         limit=100),
+                                             key=self._key).json(),
+                         {}):
+            yield from resp.values()
+
+    def execute(self, quals, columns):
+        job_ids = self.get_job_ids_from(quals)
+
+        if not job_ids:
+            raise RuntimeError('Can not query without job_id')
+
+        for job_id in job_ids:
+            for r in self._get_judgments(job_id):
+                row = {k[1:]: v for k, v in r.items() if k.startswith('_')}
+                fields = json.dumps({k: v for k, v in r.items()
+                                     if not k.startswith('_')})
+                row['fields'] = fields
+                row['job_id'] = job_id
+                yield row
