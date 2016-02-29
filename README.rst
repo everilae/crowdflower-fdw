@@ -6,9 +6,11 @@ CrowdFlower API v1 foreign data wrapper for PostgreSQL.
 Installation
 ------------
 
+```bash
     git clone https://github.com/everilae/crowdflower-fdw.git
     cd crowdflower-fdw
     python setup.py install
+```
 
 ```sql
 create server crowdflower_srv foreign data wrapper multicorn options (
