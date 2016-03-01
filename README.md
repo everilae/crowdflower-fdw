@@ -22,7 +22,7 @@ definitions.
 create extension multicorn;
 
 create server crowdflower_srv foreign data wrapper multicorn options (
-        wrapper 'crowdflower_fdw.factory'
+	wrapper 'crowdflower_fdw.factory'
 );
 
 create foreign table cf_job_result (
