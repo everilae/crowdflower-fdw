@@ -38,3 +38,9 @@ Basic result query example:
 ```sql
 select results #>> '{myfield, agg}', count(1) from crowdflower.job_result where job_id = 123123;
 ```
+
+Get all the judgments:
+
+```sql
+select jsonb_array_elements_text(fields #> '{myfield, res}') from crowdflower.job_judgment where job_id = 123123;
+```
