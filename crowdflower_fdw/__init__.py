@@ -17,12 +17,18 @@ def api_request(path, *, key, params, method='get', **kwgs):
     @return:
     """
     params['key'] = key
-    return requests.request(
+    resp = requests.request(
         method=method,
         url='https://api.crowdflower.com/v1/{}'.format(path),
         params=params,
         **kwgs
     )
+    if resp.status_code == 401:
+        raise RuntimeError("401 Unauthorized, you should probably "
+                           "call crowdflower.set_api_key")
+    # Raise for everything else
+    resp.raise_for_status()
+    return resp
 
 
 class CrowdFlowerFDW:
@@ -131,11 +137,12 @@ class JobJudgmentFDW(ForeignDataWrapper, CrowdFlowerFDW):
     def _get_judgments(self, job_id):
         page = count(1)
         path = 'jobs/{}/judgments.json'.format(job_id)
-        for resp in iter(lambda: api_request(path,
-                                             params=dict(page=next(page),
-                                                         limit=100),
-                                             key=self._key).json(),
-                         {}):
+
+        def fetch():
+           return api_request(path, params=dict(page=next(page), limit=100),
+                              key=self._key).json()
+
+        for resp in iter(fetch, {}):
             yield from resp.values()
 
     def execute(self, quals, columns):
