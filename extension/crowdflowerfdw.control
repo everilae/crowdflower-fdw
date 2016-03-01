@@ -1,0 +1,5 @@
+# crowdflowerfdw extension
+comment = 'CrowdFlower foreign data wrapper'
+default_version = '1.0'
+requires = 'plpgsql, multicorn'
+schema = 'crowdflower'
