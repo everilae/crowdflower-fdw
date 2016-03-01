@@ -36,11 +36,15 @@ Usage
 Basic result query example:
 
 ```postgresql
-select results #>> '{myfield, agg}', count(1) from crowdflower.job_result where job_id = 123123;
+select results #>> '{myfield, agg}', count(1)
+from   crowdflower.job_result
+where  job_id = 123123;
 ```
 
 Get all the judgments:
 
 ```postgresql
-select jsonb_array_elements_text(fields #> '{myfield, res}') from crowdflower.job_judgment where job_id = 123123;
+select jsonb_array_elements_text(fields #> '{myfield, res}')
+from   crowdflower.job_judgment
+where  job_id = 123123;
 ```
