@@ -31,20 +31,17 @@ def api_request(path, *, key, params, method='get', **kwgs):
     return resp
 
 
-class CrowdFlowerFDW:
+def get_job_ids_from(quals):
+    job_ids = []
+    for qual in quals:
+        if qual.field_name == 'job_id':
+            if qual.operator == '=':
+                job_ids = [qual.value]
 
-    @staticmethod
-    def get_job_ids_from(quals):
-        job_ids = []
-        for qual in quals:
-            if qual.field_name == 'job_id':
-                if qual.operator == '=':
-                    job_ids = [qual.value]
+            elif qual.is_list_operator and qual.list_any_or_all is ANY:
+                job_ids.extend(qual.value)
 
-                elif qual.is_list_operator and qual.list_any_or_all is ANY:
-                    job_ids.extend(qual.value)
-
-        return job_ids
+    return job_ids
 
 
 def factory(options, columns):
@@ -58,7 +55,7 @@ def factory(options, columns):
     raise RuntimeError('Unknown type: {!r}'.format(type_))
 
 
-class JobReportFDW(ForeignDataWrapper, CrowdFlowerFDW):
+class JobReportFDW(ForeignDataWrapper):
     """
 
     """
@@ -96,7 +93,7 @@ class JobReportFDW(ForeignDataWrapper, CrowdFlowerFDW):
         @param quals:
         @param columns:
         """
-        job_ids = self.get_job_ids_from(quals)
+        job_ids = get_job_ids_from(quals)
 
         if not job_ids:
             raise RuntimeError('Can not query without job_id')
@@ -120,7 +117,7 @@ class JobReportFDW(ForeignDataWrapper, CrowdFlowerFDW):
                     raise RuntimeError("Unit without data")
 
 
-class JobJudgmentFDW(ForeignDataWrapper, CrowdFlowerFDW):
+class JobJudgmentFDW(ForeignDataWrapper):
     """
 
     """
@@ -146,7 +143,7 @@ class JobJudgmentFDW(ForeignDataWrapper, CrowdFlowerFDW):
             yield from resp.values()
 
     def execute(self, quals, columns):
-        job_ids = self.get_job_ids_from(quals)
+        job_ids = get_job_ids_from(quals)
 
         if not job_ids:
             raise RuntimeError('Can not query without job_id')
