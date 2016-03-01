@@ -29,3 +29,12 @@ create extension multicorn;
 create extension crowdflowerfdw;
 select crowdflower.set_api_key('YOURAPIKEY');
 ```
+
+Usage
+-----
+
+Basic result query example:
+
+```sql
+select results #>> '{myfield, agg}', count(1) from crowdflower.job_result where job_id = 123123;
+```
