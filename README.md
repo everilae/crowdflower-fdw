@@ -23,7 +23,7 @@ make -C extension install
 
 In your database run the following commands.
 
-```pgsql
+```postgresql
 create extension plpgsql;
 create extension multicorn;
 create extension crowdflowerfdw;
@@ -35,12 +35,12 @@ Usage
 
 Basic result query example:
 
-```pgsql
+```postgresql
 select results #>> '{myfield, agg}', count(1) from crowdflower.job_result where job_id = 123123;
 ```
 
 Get all the judgments:
 
-```pgsql
+```postgresql
 select jsonb_array_elements_text(fields #> '{myfield, res}') from crowdflower.job_judgment where job_id = 123123;
 ```
