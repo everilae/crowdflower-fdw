@@ -105,7 +105,7 @@ class JobReportFDW(ForeignDataWrapper, CrowdFlowerFDW):
 
             for r in rs:
                 r['data'] = json.dumps(r['data'])
-                r['results'] = json.dumps(r.get('results', {}))
+                r['results'] = json.dumps(r.get('results'))
 
                 if r:
                     yield r
